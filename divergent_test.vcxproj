@@ -128,6 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="divergent_test.cpp" />
+    <ClCompile Include="Input_output\Loader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Input_output\Loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

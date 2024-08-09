@@ -6,58 +6,74 @@
 #include<unordered_set>
 #include<unordered_map>
 #include "Input_output/Loader.h"
+// ---------------------------------------------------------------------------------
+// Implement a simple mesh data structure capable of representing an all - triangle mesh and its constituent vertices.
+// This data structure should include functions to do the following :
+
+//Geometry
 union Point {
     double x, y, z;
 };
+inline double dist(Point P, Point Q) {
+    return (P.x - Q.x) * (P.x - Q.x) + (P.y - Q.y) * (P.y - Q.y) + (P.z - Q.z) * (P.z - Q.z);
+}
 
+
+//Topology
 class Vertex {
 public:
+    // d. Return the coordinates of a given vertex.
+
     Point point;
+    // b. Given a vertex , return the adjacent faces / vertices.
     std::vector<int> adjVertices;
     std::vector<int> adjFaces;
+
     bool is_deleted = false;
+    // e. Delete a vertex, with optional flag to delete all connected faces(if a vertex).
     Vertex(double X, double Y, double Z) {
         point.x = X;
         point.y = Y;
         point.z = Z;
         is_deleted = false;
     }
-    void remove(bool flag = true, Faces& faces) {
-        is_deleted = true;
-        if (flag)
-            for (auto f : adjFaces)
-                faces[f].remove();
-    }
 
 };
+inline double dist(Vertex P, Vertex Q) {return dist(P.point, Q.point);}
 
 typedef std::vector<Vertex> Vertices;
 
-inline double dist(Point P, Point Q) {
-    return (P.x - Q.x) * (P.x - Q.x) + (P.y - Q.y) * (P.y - Q.y) + (P.z - Q.z) * (P.z - Q.z);
-}
-
-inline double dist(Vertex P, Vertex Q) {
-    return dist(P.point, Q.point);
-}
-
 class Face {
 public:
+
+    // b. Given a face, return the adjacent faces / vertices.
     int vertices[3];
     std::vector<int> adjFaces;
     bool is_deleted = false;
+
+
+    // e. Delete a face
+    void remove() {
+        is_deleted = true;
+    }
+
+
+    // f. Construct a new face from vertices, and a new vertex from coordinates
     Face(int v0, int v1, int v2) {
         vertices[0] = v0;
         vertices[1] = v1;
         vertices[2] = v2;
         is_deleted = false;
     }
+
+
+    // g. Flip the sense of a face.
     void flip_sense() {
         std::swap(vertices[1], vertices[2]);
     }
-    void remove() {
-        is_deleted = true;
-    }
+
+
+    // 4. Write a function that returns all faces with minimum angle below a specified angle in degrees.
     bool check_below_threshold_angle(const Vertices& v, const double& cos2_angle) const {
         const Vertex& i = v[vertices[0]];
         const Vertex& j = v[vertices[1]];
@@ -77,7 +93,18 @@ public:
 };
 typedef std::vector<Face> Faces;
 
+
+void remove(Vertex v, Faces& faces, bool flag = true) {
+    v.is_deleted = true;
+    if (flag)
+        for (auto f : v.adjFaces)
+            faces[f].remove();
+}
+
+
+
 class Mesh {
+// c. Return all the vertices or faces.
 public:
     Vertices vertices;
     Faces faces;
@@ -99,6 +126,8 @@ struct Hash_of_Edge {
 
 typedef std::unordered_set<Edge, Hash_of_Edge> Edges;
 
+// ---------------------------------------------------------------------------------
+// 2. Write a function that returns whether all faces are consistently oriented.
 bool checkOriention(Edges& edges, int i, int j) {
     Edge edge(i, j);
 
@@ -108,7 +137,6 @@ bool checkOriention(Edges& edges, int i, int j) {
     edges.emplace(i,j);
     return true;
 }
-
 
 bool checkOriention(const Faces& faces) {
     std::unordered_set<Edge, Hash_of_Edge> edges;
@@ -120,6 +148,8 @@ bool checkOriention(const Faces& faces) {
     }
 }
 
+// ---------------------------------------------------------------------------------
+// 3. Write a function that returns the number of loops bounding a surface mesh
 void addEdges(Edges& edges, int i, int j,int& num_edges) {
     Edge edge(j, i);
 
@@ -157,6 +187,9 @@ int num_loops(const Faces& faces, int num_vertices, int num_faces) {
     //auto j = edges.begin()->j;
 }
 
+
+// ---------------------------------------------------------------------------------
+// 5. Write a function that collapses all edges with length below a specified threshold.
 void Edge_Colapse(Faces faces, Vertices v, int i,int j){
     for (auto f : v[j].adjFaces) 
         for(int ii = 0; ii<3;ii++) 
@@ -172,12 +205,13 @@ void Edge_Colapse(Faces faces, Vertices v, int i,int j){
 }
 
 
+// ---------------------------------------------------------------------------------
+// 6. (stretch)Write a function that performs a diagonal edge swap for triangles having an obtuse angle and an angle below a specified threshold in degrees.
 void get_opposite_vertices(int i, int& j, int& k) {
     if (i == 0) { j == 1; k == 2; return; }
     if (i == 1) { j == 2; k == 0; return; }
     if (i == 2) { j == 0; k == 1; return; }
 }
-
 
 void diagonal_edge_swap(Face& f1, Face& f2) {
     bool found = false;
@@ -202,6 +236,9 @@ void diagonal_edge_swap(Face& f1, Face& f2) {
 }
 
 
+// ---------------------------------------------------------------------------------
+// a. Read/write basic .obj files; sample files are included with this specification. Code can assume mesh is all triangles. Code should be capable of reading files with smoothing group ('s'), object names ('o'), polygon groups ('g'), material libraries ('mtllib'), and use materials ('usemtl'), but does not need to provide query access to those data, nor write those data.
+
 void get_points(const objl::Mesh& curMesh, Vertices& points) {
     int length = curMesh.Vertices.size();
 
@@ -221,6 +258,8 @@ void get_faces(const objl::Mesh& curMesh, Faces& faces) {
     for (int j = 0; j < length; j += 3)
         faces.emplace_back(curMesh.Indices[j], curMesh.Indices[j + 1], curMesh.Indices[j + 2]);
 }
+
+// ---------------------------------------------------------------------------------
 
 int main()
 {
