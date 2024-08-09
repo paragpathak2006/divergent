@@ -6,6 +6,7 @@
 #include<unordered_set>
 #include<unordered_map>
 #include "Input_output/Loader.h"
+#include<fstream>
 // ---------------------------------------------------------------------------------
 // Implement a simple mesh data structure capable of representing an all - triangle mesh and its constituent vertices.
 // This data structure should include functions to do the following :
@@ -14,8 +15,11 @@
 struct Point {
     double x, y, z;
 };
-inline double dist(Point P, Point Q) {
-    return (P.x - Q.x) * (P.x - Q.x) + (P.y - Q.y) * (P.y - Q.y) + (P.z - Q.z) * (P.z - Q.z);
+inline double dist(const Point& P, const Point& Q) {
+    return 
+    (P.x - Q.x) * (P.x - Q.x) + 
+    (P.y - Q.y) * (P.y - Q.y) + 
+    (P.z - Q.z) * (P.z - Q.z);
 }
 
 
@@ -40,7 +44,7 @@ public:
     }
 
 };
-inline double dist(Vertex P, Vertex Q) {return dist(P.point, Q.point);}
+inline double dist(const Vertex& P, const Vertex& Q) {return dist(P.point, Q.point);}
 
 typedef std::vector<Vertex> Vertices;
 
@@ -95,7 +99,7 @@ public:
 typedef std::vector<Face> Faces;
 
 
-void check_below_threshold_angle(const Vertices& v, Faces& faces,  const double& angle, Faces & threshhold_faces) {
+void check_below_threshold_angle(const Vertices& v, Faces& faces,  const double& angle, Faces & threshhold_faces) const {
     auto cos2_angle = std::cos(angle*3.14159/180);
     cos2_angle = cos2_angle * cos2_angle;
     for (const auto& face : faces)
@@ -110,13 +114,21 @@ void remove(Vertex v, Faces& faces, bool flag = true) {
             faces[f].remove();
 }
 
-
-
 class Mesh {
 // c. Return all the vertices or faces.
 public:
     Vertices vertices;
     Faces faces;
+    void writeObj(std::string file) const {
+        std::ofstream myfile;
+        myfile.open(file);
+        for(const auto& vertex : vertices)
+            myfile << "v " << vertex.point.x << " " << vertex.point.y << " " << vertex.point.z << "\n";
+        for (const auto& face : faces)
+            myfile << "f " << face.vertices[0] + 1 << " " << face.vertices[1] + 1 << " " << face.vertices[2] + 1 << "\n";
+
+        myfile.close();
+    }
 };
 
 class Edge {
@@ -215,9 +227,9 @@ void Edge_Colapse(Faces& faces, Vertices& v, int i,int j){
     // add adjFaces to i
 }
 
-void Edge_Colapse_List(Faces faces, Vertices v,double threshold) {
+void Edge_Colapse_List(Faces& faces, Vertices& v,double threshold) {
     threshold = threshold * threshold;
-    for (Face face : faces) {
+    for (const Face& face : faces) {
         if (dist(v[face.vertices[0]], v[face.vertices[1]]) < threshold) { Edge_Colapse(faces, v, face.vertices[0], face.vertices[1]); continue; }
         if (dist(v[face.vertices[1]], v[face.vertices[2]]) < threshold) { Edge_Colapse(faces, v, face.vertices[1], face.vertices[2]); continue; }
         if (dist(v[face.vertices[2]], v[face.vertices[0]]) < threshold) { Edge_Colapse(faces, v, face.vertices[2], face.vertices[0]); continue; }
@@ -257,6 +269,7 @@ void diagonal_edge_swap(Face& f1, Face& f2) {
 
 // ---------------------------------------------------------------------------------
 // a. Read/write basic .obj files; sample files are included with this specification. Code can assume mesh is all triangles. Code should be capable of reading files with smoothing group ('s'), object names ('o'), polygon groups ('g'), material libraries ('mtllib'), and use materials ('usemtl'), but does not need to provide query access to those data, nor write those data.
+// reference https://github.com/Bly7/OBJ-Loader
 
 void get_points(const objl::Mesh& curMesh, Vertices& points) {
     int length = curMesh.Vertices.size();
@@ -279,13 +292,14 @@ void get_faces(const objl::Mesh& curMesh, Faces& faces) {
 }
 
 // ---------------------------------------------------------------------------------
-
 int main()
 {
-    objl::Mesh mesh;        get_mesh("cube.obj", mesh);
-    Vertices vertices;      get_points(mesh, vertices);
-    Faces faces;            get_faces(mesh, faces);
-    
+    std::string fileName = "shuttle.obj";
+    objl::Mesh obj_mesh;        get_mesh(fileName, obj_mesh);
+    Mesh mesh;
+    Vertices vertices;      get_points(obj_mesh, mesh.vertices);
+    Faces faces;            get_faces(obj_mesh, mesh.faces);
+    mesh.writeObj("output_" + fileName);
     std::cout << "Hello World!\n";
 }
 
