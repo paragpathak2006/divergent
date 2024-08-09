@@ -282,7 +282,7 @@ void get_faces(const objl::Mesh& curMesh, Faces& faces) {
 
 int main()
 {
-    objl::Mesh mesh;        get_mesh("shuttle.obj", mesh);
+    objl::Mesh mesh;        get_mesh("cube.obj", mesh);
     Vertices vertices;      get_points(mesh, vertices);
     Faces faces;            get_faces(mesh, faces);
     
