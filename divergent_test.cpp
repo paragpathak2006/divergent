@@ -11,7 +11,7 @@
 // This data structure should include functions to do the following :
 
 //Geometry
-union Point {
+struct Point {
     double x, y, z;
 };
 inline double dist(Point P, Point Q) {
@@ -263,12 +263,9 @@ void get_faces(const objl::Mesh& curMesh, Faces& faces) {
 
 int main()
 {
-    objl::Mesh mesh;    get_mesh("cube.obj", mesh);
-
+    objl::Mesh mesh;        get_mesh("shuttle.obj", mesh);
     Vertices vertices;      get_points(mesh, vertices);
-    Faces faces;        get_faces(mesh, faces);
-
-
+    Faces faces;            get_faces(mesh, faces);
     
     std::cout << "Hello World!\n";
 }
