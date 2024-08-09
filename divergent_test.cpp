@@ -19,6 +19,7 @@ inline double dist(Point P, Point Q) {
 }
 
 
+
 //Topology
 class Vertex {
 public:
@@ -93,6 +94,14 @@ public:
 };
 typedef std::vector<Face> Faces;
 
+
+void check_below_threshold_angle(const Vertices& v, Faces& faces,  const double& angle, Faces & threshhold_faces) {
+    auto cos2_angle = std::cos(angle*3.14159/180);
+    cos2_angle = cos2_angle * cos2_angle;
+    for (const auto& face : faces)
+        if(face.check_below_threshold_angle(v, cos2_angle))
+            threshhold_faces.push_back(face);
+}
 
 void remove(Vertex v, Faces& faces, bool flag = true) {
     v.is_deleted = true;
@@ -190,13 +199,15 @@ int num_loops(const Faces& faces, int num_vertices, int num_faces) {
 
 // ---------------------------------------------------------------------------------
 // 5. Write a function that collapses all edges with length below a specified threshold.
-void Edge_Colapse(Faces faces, Vertices v, int i,int j){
+void Edge_Colapse(Faces& faces, Vertices& v, int i,int j){
+
+
     for (auto f : v[j].adjFaces) 
         for(int ii = 0; ii<3;ii++) 
             if (faces[f].vertices[ii] == j) 
                 faces[f].vertices[ii] = i;
     
-    for (const auto& adjV : v[j].adjVertices)
+    for (auto& adjV : v[j].adjVertices)
         for (auto& adjV2 : v[adjV].adjVertices)
             if (adjV2 == j) 
                 adjV2 = i;
@@ -204,6 +215,14 @@ void Edge_Colapse(Faces faces, Vertices v, int i,int j){
     // add adjFaces to i
 }
 
+void Edge_Colapse_List(Faces faces, Vertices v,double threshold) {
+    threshold = threshold * threshold;
+    for (Face face : faces) {
+        if (dist(v[face.vertices[0]], v[face.vertices[1]]) < threshold) { Edge_Colapse(faces, v, face.vertices[0], face.vertices[1]); continue; }
+        if (dist(v[face.vertices[1]], v[face.vertices[2]]) < threshold) { Edge_Colapse(faces, v, face.vertices[1], face.vertices[2]); continue; }
+        if (dist(v[face.vertices[2]], v[face.vertices[0]]) < threshold) { Edge_Colapse(faces, v, face.vertices[2], face.vertices[0]); continue; }
+    }
+}
 
 // ---------------------------------------------------------------------------------
 // 6. (stretch)Write a function that performs a diagonal edge swap for triangles having an obtuse angle and an angle below a specified threshold in degrees.
