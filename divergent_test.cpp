@@ -99,7 +99,7 @@ public:
 typedef std::vector<Face> Faces;
 
 
-void check_below_threshold_angle(const Vertices& v, Faces& faces,  const double& angle, Faces & threshhold_faces) const {
+void check_below_threshold_angle(const Vertices& v, Faces& faces,  const double& angle, Faces & threshhold_faces) {
     auto cos2_angle = std::cos(angle*3.14159/180);
     cos2_angle = cos2_angle * cos2_angle;
     for (const auto& face : faces)
